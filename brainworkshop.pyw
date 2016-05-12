@@ -2517,7 +2517,7 @@ class UpdateLabel:
     def __init__(self):
         self.label = pyglet.text.Label(
             '',
-            multiline = True, width = field.size//3 - 4, halign='middle',
+            multiline = True, width = field.size//3 - 4, align='center',
             font_size=11, bold=True,
             color=(0, 128, 0, 255),
             x=window.width//2, y=field.center_x + field.size // 6,
