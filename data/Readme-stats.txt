@@ -1,17 +1,17 @@
-The session stats are output to a comma-separated file "stats.txt" (for the 
-default user) or "USERNAME-stats.txt" (for other users) in this directory.  
-Detailed per-trial stats, including reaction times, can be found in the 
+The session stats are output to a comma-separated file "stats.txt" (for the
+default user) or "USERNAME-stats.txt" (for other users) in this directory.
+Detailed per-trial stats, including reaction times, can be found in the
 "USERNAME-sessions.dat" in python's pickle data format.
 
 The rest of this file documents the format of the "stats.txt" files.
 
-NOTE: To specify a different stats file than "stats.txt", either create a new 
+NOTE: To specify a different stats file than "stats.txt", either create a new
 user profile, or use the command-line option: --statsfile
 Example:
    brainworkshop.exe --statsfile fred.txt
    brainworkshop.exe --statsfile mary.txt
 
-Each line holds the data for one session (about 60 seconds).  To be parsed 
+Each line holds the data for one session (about 60 seconds).  To be parsed
 properly by Brain Workshop, a particular format must be maintained.
 
 Example line:
@@ -70,7 +70,7 @@ Example line:
 	15. Image
 	16. Vis & N-Audio
 	17. Audio2
-	18. Position2 
+	18. Position2
 	19. Position3
 	20. Position4
 	21. Color1 or Image1 (multi-stim mode only)
