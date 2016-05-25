@@ -580,7 +580,7 @@ class Message:
                             color=cfg.COLOR_TEXT,
                             batch=self.batch,
                             multiline=True,
-                            width=(4*window.width)/5,
+                            width=(4*window.width)//5,
                             font_size=14,
                             x=window.width//2, y=window.height//2,
                             anchor_x='center', anchor_y='center')
@@ -992,9 +992,9 @@ def default_ticks(mode):
     if ('TICKS_%i' % mode) in cfg:
         return cfg['TICKS_%i' % mode]
     elif mode > 127:
-        bonus = ((mode & 128)/128) * cfg.BONUS_TICKS_CRAB
+        bonus = ((mode & 128)//128) * cfg.BONUS_TICKS_CRAB
         if mode & 768:
-            bonus += cfg['BONUS_TICKS_MULTI_%i' % ((mode & 768)/256+1)]
+            bonus += cfg['BONUS_TICKS_MULTI_%i' % ((mode & 768)//256+1)]
         if DEBUG: print("Adding a bonus of %i ticks for mode %i" % (bonus, mode))
         return bonus + default_ticks(mode % 128)
     else:
@@ -1672,13 +1672,13 @@ class TextInputScreen:
         self.batch = pyglet.graphics.Batch()
         self.title = pyglet.text.Label(title, font_size=self.titlesize,
             bold=True, color=self.textcolor, batch=self.batch,
-            x=window.width/2, y=(window.height*9)/10,
+            x=window.width//2, y=(window.height*9)//10,
             anchor_x='center', anchor_y='center')
         self.document = pyglet.text.document.UnformattedDocument()
         self.document.set_style(0, len(self.document.text), {'color': self.textcolor})
         self.layout = pyglet.text.layout.IncrementalTextLayout(self.document,
-            (window.width/2 - 20 - len(title)*6), (window.height*10)/11, batch=self.batch)
-        self.layout.x = (window.width)/2 + 15 + len(title)*6
+            (window.width//2 - 20 - len(title)*6), (window.height*10)//11, batch=self.batch)
+        self.layout.x = (window.width)//2 + 15 + len(title)*6
         if not callback: callback = lambda x: x
         self.callback = callback
         self.caret = pyglet.text.caret.Caret(self.layout)
@@ -1769,7 +1769,7 @@ class Menu:
         self.bgcolor = (255 * int(not cfg.BLACK_BACKGROUND), )*3
         self.textcolor = (255 * int(cfg.BLACK_BACKGROUND), )*3 + (255,)
         self.markercolors = (0,0,255,0,255,0,255,0,0)#(255 * int(cfg.BLACK_BACKGROUND), )*3*3
-        self.pagesize = min(len(options), (window.height*6/10) / (self.choicesize*3/2))
+        self.pagesize = min(len(options), (window.height*6//10) // (self.choicesize*3//2))
         if type(options) == dict:
             vals = options
             self.options = list(options.keys())
@@ -1788,16 +1788,16 @@ class Menu:
         self.batch = pyglet.graphics.Batch()
         self.title = pyglet.text.Label(title, font_size=self.titlesize,
             bold=True, color=self.textcolor, batch=self.batch,
-            x=window.width/2, y=(window.height*9)/10,
+            x=window.width//2, y=(window.height*9)//10,
             anchor_x='center', anchor_y='center')
         self.footnote = pyglet.text.Label(footnote, font_size=self.footnotesize,
             bold=True, color=self.textcolor, batch=self.batch,
-            x=window.width/2, y=(window.height*2)/10,
+            x=window.width//2, y=(window.height*2)//10,
             anchor_x='center', anchor_y='center')
 
         self.labels = [pyglet.text.Label('', font_size=self.choicesize,
             bold=True, color=self.textcolor, batch=self.batch,
-            x=window.width/8, y=(window.height*8)/10 - i*(self.choicesize*3/2),
+            x=window.width//8, y=(window.height*8)//10 - i*(self.choicesize*3//2),
             anchor_x='left', anchor_y='center', font_name=self.fontlist)
                        for i in range(self.pagesize)]
 
@@ -1837,9 +1837,9 @@ class Menu:
         if ending:
             self.labels[i].text = '...'
         w, h, cs = window.width, window.height, self.choicesize
-        self.marker.vertices = [w/10, (h*8)/10 - markerpos*(cs*3/2) + cs/2,
-                                w/9,  (h*8)/10 - markerpos*(cs*3/2),
-                                w/10, (h*8)/10 - markerpos*(cs*3/2) - cs/2]
+        self.marker.vertices = [w//10, (h*8)//10 - markerpos*(cs*3//2) + cs//2,
+                                w//9,  (h*8)//10 - markerpos*(cs*3//2),
+                                w//10, (h*8)//10 - markerpos*(cs*3//2) - cs//2]
 
     def move_selection(self, steps, relative=True):
         # FIXME:  pageup/pagedown can occasionally cause "Hello bug!" to be displayed
@@ -2025,7 +2025,7 @@ class GameSelect(Menu):
         Menu.__init__(self, options, vals, names=names, title=_('Choose your game mode'))
         self.modelabel = pyglet.text.Label('', font_size=self.titlesize,
             bold=False, color=(0,0,0,255), batch=self.batch,
-            x=window.width/2, y=(window.height*1)/10,
+            x=window.width//2, y=(window.height*1)//10,
             anchor_x='center', anchor_y='center')
         self.update_labels()
         self.newmode = mode.mode # self.newmode will be False if an invalid mode is chosen
@@ -2182,7 +2182,7 @@ class SoundSelect(Menu):
                 self.new_sets['2'+audio] = audio in cfg.AUDIO2_SETS
         options = list(self.new_sets.keys())
         options.sort()
-        options.insert(len(self.new_sets)/2, "Blank line") # Menu.update_labels and .select will ignore this
+        options.insert(len(self.new_sets)//2, "Blank line") # Menu.update_labels and .select will ignore this
         options.append("Blank line")
         options.extend(['cfg.CHANNEL_AUDIO1', 'cfg.CHANNEL_AUDIO2'])
         lcr = ['left', 'right', 'center']
@@ -2241,14 +2241,14 @@ class Field:
         if cfg.FIELD_EXPAND:
             self.center_y = window.height // 2
         else: self.center_y = window.height // 2 + 20
-        self.x1 = self.center_x - self.size/2
-        self.x2 = self.center_x + self.size/2
-        self.x3 = self.center_x - self.size/6
-        self.x4 = self.center_x + self.size/6
-        self.y1 = self.center_y - self.size/2
-        self.y2 = self.center_y + self.size/2
-        self.y3 = self.center_y - self.size/6
-        self.y4 = self.center_y + self.size/6
+        self.x1 = self.center_x - self.size//2
+        self.x2 = self.center_x + self.size//2
+        self.x3 = self.center_x - self.size//6
+        self.x4 = self.center_x + self.size//6
+        self.y1 = self.center_y - self.size//2
+        self.y2 = self.center_y + self.size//2
+        self.y3 = self.center_y - self.size//6
+        self.y4 = self.center_y + self.size//6
 
         # add the inside lines
         if cfg.GRIDLINES:
@@ -2310,7 +2310,7 @@ class Visual:
             self.size_factor = 0.9375
         else:
             self.size_factor = 1.0
-        self.size = int(field.size / 3 * self.size_factor)
+        self.size = int(field.size // 3 * self.size_factor)
 
         # load an image set
         self.load_set()
@@ -2341,8 +2341,8 @@ class Visual:
         self.color = get_color(color)
         self.vis = vis
 
-        self.center_x = field.center_x + (field.size / 3)*((position+1)%3 - 1) + (field.size / 3 - self.size)/2
-        self.center_y = field.center_y + (field.size / 3)*((position/3+1)%3 - 1) + (field.size / 3 - self.size)/2
+        self.center_x = field.center_x + (field.size // 3)*((position+1)%3 - 1) + (field.size // 3 - self.size)//2
+        self.center_y = field.center_y + (field.size // 3)*((position//3+1)%3 - 1) + (field.size // 3 - self.size)//2
 
         if self.vis == 0:
             if cfg.OLD_STYLE_SQUARES:
@@ -2805,7 +2805,7 @@ class FeedbackLabel:
             x=-200, y=30, # we'll fix this position later, after we see how big the label is
             anchor_x='left', anchor_y='center', batch=batch, font_size=font_size)
         #w = self.label.width  # this doesn't work; how are you supposed to find the width of a label texture?
-        w = (len(self.text) * font_size*4)/5
+        w = (len(self.text) * font_size*4)//5
         dis = (window.width-100) / float(total-.99)
         x = 30 + int( pos*dis - w*pos/(total-.5) )
 
@@ -2886,7 +2886,7 @@ class ArithmeticAnswerLabel:
         self.decimal = False
         self.label = pyglet.text.Label(
             '',
-            x=window.width/2 - 40, y=30,
+            x=window.width//2 - 40, y=30,
             anchor_x='left', anchor_y='center', batch=batch)
         self.update()
     def update(self):
@@ -3337,7 +3337,7 @@ class Saccadic:
         mode.saccadic = False
 
     def draw(self):
-        y = window.height / 2
+        y = window.height // 2
         if saccadic.position == 'left':
             x = self.radius
         elif saccadic.position == 'right':
@@ -3428,7 +3428,7 @@ Press SPACE to continue, or press D to donate now.
                             color=cfg.COLOR_TEXT,
                             batch=self.batch,
                             multiline=True,
-                            width=(4*window.width)/5,
+                            width=(4*window.width)//5,
                             font_size=14,
                             x=window.width//2, y=window.height//2,
                             anchor_x='center', anchor_y='center')
