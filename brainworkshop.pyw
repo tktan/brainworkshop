@@ -790,7 +790,7 @@ def update_check():
     req = urllib.request.Request(WEB_VERSION_CHECK)
     try:
         response = urllib.request.urlopen(req)
-        version = response.readline().strip()
+        version = response.readline().strip().decode()
     except:
         return
     if version > VERSION: # simply comparing strings works just fine
