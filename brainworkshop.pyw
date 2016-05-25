@@ -16,14 +16,14 @@
 
 VERSION = '4.8.6'
 
-import random, os, sys, imp, socket, urllib2, webbrowser, time, math, ConfigParser, StringIO, traceback, datetime
-import cPickle as pickle
+import random, os, sys, imp, socket, urllib.request, urllib.error, urllib.parse, webbrowser, time, math, configparser, io, traceback, datetime
+import pickle as pickle
 from decimal import Decimal
 from time import strftime
 from datetime import date
 
 import gettext
-gettext.install('messages', localedir='res/i18n', unicode=True)
+gettext.install('messages', localedir='res/i18n', str=True)
 
 # Clinical mode?  Clinical mode sets cfg.JAEGGI_MODE = True, enforces a minimal user
 # interface, and saves results into a binary file (default 'logfile.dat') which
@@ -101,18 +101,18 @@ def edit_config_ini():
         cmd = 'open'
     else:
         cmd = 'xdg-open'
-    print (cmd + ' "' + os.path.join(get_data_dir(), CONFIGFILE) + '"')
+    print((cmd + ' "' + os.path.join(get_data_dir(), CONFIGFILE) + '"'))
     window.on_close()
     import subprocess
     subprocess.call((cmd + ' "' + os.path.join(get_data_dir(), CONFIGFILE) + '"'), shell=True)
     sys.exit(0)
 
 def quit_with_error(message='', postmessage='', quit=True, trace=True):
-    if message:     print >> sys.stderr, message + '\n'
+    if message:     print(message + '\n', file=sys.stderr)
     if trace:
-        print >> sys.stderr, _("Full text of error:\n")
+        print(_("Full text of error:\n"), file=sys.stderr)
         traceback.print_exc()
-    if postmessage: print >> sys.stderr, '\n\n' + postmessage
+    if postmessage: print('\n\n' + postmessage, file=sys.stderr)
     if quit:        sys.exit(1)
 
 CONFIGFILE_DEFAULT_CONTENTS = """
@@ -571,7 +571,7 @@ messagequeue = [] # add messages generated during loading here
 class Message:
     def __init__(self, msg):
         if not 'window' in globals():
-            print msg                # dump it to console just in case
+            print(msg)                # dump it to console just in case
             messagequeue.append(msg) # but we'll display this later
             return
         self.batch = pyglet.graphics.Batch()
@@ -664,15 +664,15 @@ def parse_config(configpath):
         oldconfigfile.close()
 
         try:
-            config = ConfigParser.ConfigParser()
+            config = configparser.ConfigParser()
             config.read(os.path.join(get_data_dir(), configpath))
         except:
             if configpath != 'config.ini':
                 quit_with_error(_('Unable to load config file: %s') %
                                  os.path.join(get_data_dir(), configpath))
 
-    defaultconfig = ConfigParser.ConfigParser()
-    defaultconfig.readfp(StringIO.StringIO(CONFIGFILE_DEFAULT_CONTENTS))
+    defaultconfig = configparser.ConfigParser()
+    defaultconfig.readfp(io.StringIO(CONFIGFILE_DEFAULT_CONTENTS))
 
     def try_eval(text):  # this is a one-use function for config parsing
         try:  return eval(text)
@@ -787,9 +787,9 @@ def update_check():
     global update_available
     global update_version
     socket.setdefaulttimeout(TIMEOUT_SILENT)
-    req = urllib2.Request(WEB_VERSION_CHECK)
+    req = urllib.request.Request(WEB_VERSION_CHECK)
     try:
-        response = urllib2.urlopen(req)
+        response = urllib.request.urlopen(req)
         version = response.readline().strip()
     except:
         return
@@ -875,8 +875,8 @@ def test_avbin():
         cfg.USE_MUSIC = False
         if pyglet.version >= '1.2':
             pyglet.media.have_avbin = False
-        print _('AVBin not detected. Music disabled.')
-        print _('Download AVBin from: http://code.google.com/p/avbin/')
+        print(_('AVBin not detected. Music disabled.'))
+        print(_('Download AVBin from: http://code.google.com/p/avbin/'))
 
     except: # WindowsError
         cfg.USE_MUSIC = False
@@ -914,7 +914,7 @@ else:                       del supportedtypes['music']
 supportedtypes['misc'] = supportedtypes['sounds'] + supportedtypes['sprites']
 
 resourcepaths = {}
-for restype in supportedtypes.keys():
+for restype in list(supportedtypes.keys()):
     res_sets = {}
     for folder in os.listdir(os.path.join(res_path, restype)):
         contents = []
@@ -927,7 +927,7 @@ for restype in supportedtypes.keys():
     if res_sets: resourcepaths[restype] = res_sets
 
 sounds = {}
-for k in resourcepaths['sounds'].keys():
+for k in list(resourcepaths['sounds'].keys()):
     sounds[k] = {}
     for f in resourcepaths['sounds'][k]:
         sounds[k][os.path.basename(f).split('.')[0]] = pyglet.media.load(f, streaming=False)
@@ -995,7 +995,7 @@ def default_ticks(mode):
         bonus = ((mode & 128)/128) * cfg.BONUS_TICKS_CRAB
         if mode & 768:
             bonus += cfg['BONUS_TICKS_MULTI_%i' % ((mode & 768)/256+1)]
-        if DEBUG: print "Adding a bonus of %i ticks for mode %i" % (bonus, mode)
+        if DEBUG: print("Adding a bonus of %i ticks for mode %i" % (bonus, mode))
         return bonus + default_ticks(mode % 128)
     else:
         return cfg.TICKS_DEFAULT
@@ -1144,7 +1144,7 @@ class Mode:
         self.flags = {}
 
         # generate crab modes
-        for m in self.short_mode_names.keys():
+        for m in list(self.short_mode_names.keys()):
             nm = m | 128                          # newmode; Crab DNB = 2 | 128 = 130
             self.flags[m]  = {'crab':0, 'multi':1, 'selfpaced':0}# forwards
             self.flags[nm] = {'crab':1, 'multi':1, 'selfpaced':0}# every (self.back) stimuli are reversed for matching
@@ -1154,7 +1154,7 @@ class Mode:
             # so we take a copy of the list, in case we want to change it later
 
         # generate multi-stim modes
-        for m in self.short_mode_names.keys():
+        for m in list(self.short_mode_names.keys()):
             for n, s in [(2, _('Double-stim')), (3, _('Triple-stim')), (4, _('Quadruple-stim'))]:
                 if set(['color', 'image']).issubset(self.modalities[m]) \
                   or not 'position1' in self.modalities[m] \
@@ -1163,19 +1163,19 @@ class Mode:
                 nm = m | 256 * (n-1)               # newmode; 3xDNB = 2 | 512 = 514
                 self.flags[nm] = dict(self.flags[m]) # take a copy
                 self.flags[nm]['multi'] = n
-                self.short_mode_names[nm] = `n` + 'x' + self.short_mode_names[m]
+                self.short_mode_names[nm] = repr(n) + 'x' + self.short_mode_names[m]
                 self.long_mode_names[nm] = s + ' ' + self.long_mode_names[m]
                 self.modalities[nm] = self.modalities[m][:] # take a copy ([:])
                 for i in range(2, n+1):
-                    self.modalities[nm].insert(i-1, 'position'+`i`)
+                    self.modalities[nm].insert(i-1, 'position'+repr(i))
                 if 'color' in self.modalities[m] or 'image' in self.modalities[m]:
                     for i in range(1, n+1):
-                        self.modalities[nm].insert(n+i-1, 'vis'+`i`)
+                        self.modalities[nm].insert(n+i-1, 'vis'+repr(i))
                 for ic in 'image', 'color':
                     if ic in self.modalities[nm]:
                         self.modalities[nm].remove(ic)
 
-        for m in self.short_mode_names.keys():
+        for m in list(self.short_mode_names.keys()):
             nm = m | 1024
             self.short_mode_names[nm] = 'SP-' + self.short_mode_names[m]
             self.long_mode_names[nm] = 'Self-paced ' + self.long_mode_names[m]
@@ -1295,14 +1295,14 @@ class Graph:
 
     def next_style(self):
         self.style = (self.style + 1) % len(self.styles)
-        print "style = %s" % self.styles[self.style] # fixme:  change the labels
+        print("style = %s" % self.styles[self.style]) # fixme:  change the labels
         self.parse_stats()
 
     def reset_dictionaries(self):
         self.dictionaries = dict([(i, {}) for i in mode.modalities])
 
     def reset_percents(self):
-        self.percents = dict([(k, dict([(i, []) for i in v])) for k,v in mode.modalities.items()])
+        self.percents = dict([(k, dict([(i, []) for i in v])) for k,v in list(mode.modalities.items())])
 
     def next_nonempty_mode(self):
         self.next_mode()
@@ -1312,7 +1312,7 @@ class Graph:
             self.next_mode()
             mode2 = mode1
     def next_mode(self):
-        modes = mode.modalities.keys()
+        modes = list(mode.modalities.keys())
         modes.sort()
         i = modes.index(self.graph)
         i = (i + 1) % len(modes)
@@ -1378,10 +1378,10 @@ class Graph:
                 else:
                     return 0.
             def cent(x):
-                return map(lambda y: .01*y, x)
+                return [.01*y for y in x]
 
-            for dictionary in self.dictionaries.values():
-                for datestamp in dictionary.keys(): # this would be so much easier with numpy
+            for dictionary in list(self.dictionaries.values()):
+                for datestamp in list(dictionary.keys()): # this would be so much easier with numpy
                     entries = dictionary[datestamp]
                     if self.styles[self.style] == 'N':
                         scores = [entry[0] for entry in entries]
@@ -1466,7 +1466,7 @@ class Graph:
         bottom = center_y - height // 2
         try:
             dictionary = self.dictionaries[self.graph]
-        except: print self.graph
+        except: print(self.graph)
         graph_title = mode.long_mode_names[self.graph] + _(' N-Back')
 
         self.batch.add(3, GL_LINE_STRIP,
@@ -1514,7 +1514,7 @@ class Graph:
         x = left - 60, y = center_y,
         anchor_x = 'right', anchor_y = 'center')
 
-        dates = dictionary.keys()
+        dates = list(dictionary.keys())
         dates.sort()
         if len(dates) < 2:
             pyglet.text.Label(_('Insufficient data: two days needed'),
@@ -1772,14 +1772,14 @@ class Menu:
         self.pagesize = min(len(options), (window.height*6/10) / (self.choicesize*3/2))
         if type(options) == dict:
             vals = options
-            self.options = options.keys()
+            self.options = list(options.keys())
         else:
             vals = dict([[op, None] for op in options])
             self.options = options
         self.values = values or vals # use values if there's anything in it
         self.actions = actions
         for op in self.options:
-            if not op in names.keys():
+            if not op in list(names.keys()):
                 names[op] = op
         self.names = names
         self.choose_once = choose_once
@@ -1828,7 +1828,7 @@ class Menu:
             k = self.options[i+di]
             if k == 'Blank line':
                 self.labels[i].text = ''
-            elif k in self.values.keys() and not self.values[k] == None:
+            elif k in list(self.values.keys()) and not self.values[k] == None:
                 v = self.values[k]
                 self.labels[i].text = '%s:%7s' % (self.names[k].ljust(52), self.textify(v))
             else:
@@ -1873,7 +1873,7 @@ class Menu:
         i = self.selpos
         if k == "Blank line":
             pass
-        elif k in self.actions.keys():
+        elif k in list(self.actions.keys()):
             self.values[k] = self.actions[k](k)
         elif type(self.values[k]) == bool:
             self.values[k] = not self.values[k]  # todo: other data types
@@ -1887,7 +1887,7 @@ class Menu:
         self.update_labels()
 
     def choose(self, k, i): # override this method in subclasses
-        print "Thank you for beta-testing our software."
+        print("Thank you for beta-testing our software.")
 
     def close(self):
         return window.remove_handlers(self.on_key_press, self.on_text,
@@ -1973,7 +1973,7 @@ class OptionsScreen(Menu):
         """
         Sorta works.  Not yet useful, though.
         """
-        options = cfg.keys()
+        options = list(cfg.keys())
         options.sort()
         Menu.__init__(self, options=options, values=cfg, title=_('Configuration'))
 
@@ -2043,7 +2043,7 @@ class GameSelect(Menu):
         Menu.update_labels(self)
 
     def calc_mode(self):
-        modes = [k for (k, v) in self.values.items() if v and not isinstance(v, Cycler)]
+        modes = [k for (k, v) in list(self.values.items()) if v and not isinstance(v, Cycler)]
         crab = 'crab' in modes
         if 'variable' in modes:  modes.remove('variable')
         if 'combination' in modes:
@@ -2058,7 +2058,7 @@ class GameSelect(Menu):
             modes.remove('selfpaced')
             base += 1024
 
-        candidates = set([k for k,v in mode.modalities.items() if not
+        candidates = set([k for k,v in list(mode.modalities.items()) if not
                          [True for m in modes if not m in v] and not
                          [True for m in v if not m in modes]])
         candidates = candidates & set(range(0, 128))
@@ -2068,7 +2068,7 @@ class GameSelect(Menu):
                 self.newmode = candidate
             else: self.newmode = False
         else:
-            if DEBUG: print candidates, base
+            if DEBUG: print(candidates, base)
             self.newmode = False
 
     def close(self):
@@ -2133,8 +2133,8 @@ class GameSelect(Menu):
 
 
         Menu.select(self)
-        modes = [k for k,v in self.values.items() if v]
-        if not [v for k,v in self.values.items()
+        modes = [k for k,v in list(self.values.items()) if v]
+        if not [v for k,v in list(self.values.items())
                   if v and not k in ('crab', 'combination', 'variable')] \
            or len(modes) == 1 and modes[0] in ['image', 'color']:
             self.values['position1'] = True
@@ -2147,7 +2147,7 @@ class ImageSelect(Menu):
         self.new_sets = {}
         for image in imagesets:
             self.new_sets[image] = image in cfg.IMAGE_SETS
-        options = self.new_sets.keys()
+        options = list(self.new_sets.keys())
         options.sort()
         vals = self.new_sets
         Menu.__init__(self, options, vals, title=_('Choose images to use for the Image n-back tasks.'))
@@ -2155,14 +2155,14 @@ class ImageSelect(Menu):
     def close(self):
         while cfg.IMAGE_SETS:
             cfg.IMAGE_SETS.remove(cfg.IMAGE_SETS[0])
-        for k,v in self.new_sets.items():
+        for k,v in list(self.new_sets.items()):
             if v: cfg.IMAGE_SETS.append(k)
         Menu.close(self)
         update_all_labels()
 
     def select(self):
         Menu.select(self)
-        if not [val for val in self.values.values() if (val and not isinstance(val, Cycler))]:
+        if not [val for val in list(self.values.values()) if (val and not isinstance(val, Cycler))]:
             i = 0
             if self.selpos == 0:
                 i = random.randint(1, len(self.options)-1)
@@ -2180,7 +2180,7 @@ class SoundSelect(Menu):
         for audio in audiosets:
             if not audio == 'operations':
                 self.new_sets['2'+audio] = audio in cfg.AUDIO2_SETS
-        options = self.new_sets.keys()
+        options = list(self.new_sets.keys())
         options.sort()
         options.insert(len(self.new_sets)/2, "Blank line") # Menu.update_labels and .select will ignore this
         options.append("Blank line")
@@ -2200,7 +2200,7 @@ class SoundSelect(Menu):
     def close(self):
         cfg.AUDIO1_SETS = []
         cfg.AUDIO2_SETS = []
-        for k,v in self.new_sets.items():
+        for k,v in list(self.new_sets.items()):
             if   k.startswith('1') and v: cfg.AUDIO1_SETS.append(k[1:])
             elif k.startswith('2') and v: cfg.AUDIO2_SETS.append(k[1:])
         cfg.CHANNEL_AUDIO1  = self.values['cfg.CHANNEL_AUDIO1'].value()
@@ -2211,8 +2211,8 @@ class SoundSelect(Menu):
     def select(self):
         Menu.select(self)
         for c in ('1', '2'):
-            if not [v for k,v in self.values.items() if (k.startswith(c) and v and not isinstance(v, Cycler))]:
-                options = resourcepaths['sounds'].keys()
+            if not [v for k,v in list(self.values.items()) if (k.startswith(c) and v and not isinstance(v, Cycler))]:
+                options = list(resourcepaths['sounds'].keys())
                 options.remove('operations')
                 i = 0
                 if self.selpos == 0:
@@ -2328,7 +2328,7 @@ class Visual:
         self.image_set_size = self.image_set[0].width
 
     def choose_random_images(self, number):
-        self.image_indices = random.sample(range(len(self.image_set)), number)
+        self.image_indices = random.sample(list(range(len(self.image_set))), number)
         self.images = random.sample(self.image_set, number)
 
     def choose_indicated_images(self, indices):
@@ -2366,8 +2366,8 @@ class Visual:
                          [rx - int(cr*(1-math.sin(math.radians(i)))) for i in range(90, -1, -10)] +
                          [lx + int(cr*(1-math.cos(math.radians(i)))) for i in range(90, -1, -10)])
 
-                    y = ([by + int(cr*(1-math.sin(math.radians(i)))) for i in range(0, 91, 10) + range(90, -1, -10)] +
-                         [ty - int(cr*(1-math.sin(math.radians(i)))) for i in range(0, 91, 10) + range(90, -1, -10)])
+                    y = ([by + int(cr*(1-math.sin(math.radians(i)))) for i in list(range(0, 91, 10)) + list(range(90, -1, -10))] +
+                         [ty - int(cr*(1-math.sin(math.radians(i)))) for i in list(range(0, 91, 10)) + list(range(90, -1, -10))])
                     xy = []
                     for a,b in zip(x,y): xy.extend((a, b))
 
@@ -2989,7 +2989,7 @@ class ThresholdLabel:
         if mode.started or mode.manual or CLINICAL_MODE:
             self.label.text = ''
         else:
-            self.label.text = _(u'Thresholds:\nRaise level: \u2265 %i%%\nLower level: < %i%%') % \
+            self.label.text = _('Thresholds:\nRaise level: \u2265 %i%%\nLower level: < %i%%') % \
             (get_threshold_advance(), get_threshold_fallback())   # '\u2265' = '>='
 
 # this controls the "press space to begin session #" text.
@@ -3620,16 +3620,16 @@ class Stats:
         #self.session['arithmetic_rt'] = []
 
     def save_input(self):
-        for k, v in mode.current_stim.items():
+        for k, v in list(mode.current_stim.items()):
             if k == 'number':
                 self.session['numbers'].append(v)
             else:
                 self.session[k].append(v)
             if k == 'vis': # goes to both self.session['vis'] and ['image']
                 self.session['image'].append(v)
-        for k, v in mode.inputs.items():
+        for k, v in list(mode.inputs.items()):
             self.session[k + '_input'].append(v)
-        for k, v in mode.input_rts.items():
+        for k, v in list(mode.input_rts.items()):
             self.session[k + '_rt'].append(v)
 
         self.session['operation'].append(mode.current_operation)
@@ -3840,8 +3840,8 @@ def new_session():
 
     visuals[0].load_set()
     visuals[0].choose_random_images(8)
-    visuals[0].letters  = random.sample(sounds[mode.sound_mode ].keys(), 8)
-    visuals[0].letters2 = random.sample(sounds[mode.sound2_mode].keys(), 8)
+    visuals[0].letters  = random.sample(list(sounds[mode.sound_mode ].keys()), 8)
+    visuals[0].letters2 = random.sample(list(sounds[mode.sound2_mode].keys()), 8)
 
 
     for i in range(1, mode.flags[mode.mode]['multi']):
@@ -3906,7 +3906,7 @@ def end_session(cancelled=False):
 # this function causes the key labels along the bottom to revert to their
 # "non-pressed" state for a new trial or when returning to the main screen.
 def reset_input():
-    for k in mode.inputs.keys():
+    for k in list(mode.inputs.keys()):
         mode.inputs[k] = False
         mode.input_rts[k] = 0.
     arithmeticAnswerLabel.reset_input()
@@ -3978,10 +3978,10 @@ def compute_bt_sequence():
 # responsible for the random generation of each new stimulus (audio, color, position)
 def generate_stimulus():
     # first, randomly generate all stimuli
-    positions = random.sample(range(1,9), 4)   # sample without replacement
-    for s, p in zip(range(1, 5), positions):
-        mode.current_stim['position' + `s`] = p
-        mode.current_stim['vis' + `s`] = random.randint(1, 8)
+    positions = random.sample(list(range(1,9)), 4)   # sample without replacement
+    for s, p in zip(list(range(1, 5)), positions):
+        mode.current_stim['position' + repr(s)] = p
+        mode.current_stim['vis' + repr(s)] = random.randint(1, 8)
 
     #mode.current_stim['position1'] = random.randint(1, 8)
     mode.current_stim['color'] = random.randint(1, 8)
@@ -4015,7 +4015,7 @@ def generate_stimulus():
                     possibilities.append(x)
                     continue
                 frac = Decimal(abs(number_nback)) / Decimal(abs(x))
-                if (frac % 1) in map(Decimal, cfg.ARITHMETIC_ACCEPTABLE_DECIMALS):
+                if (frac % 1) in list(map(Decimal, cfg.ARITHMETIC_ACCEPTABLE_DECIMALS)):
                     possibilities.append(x)
             mode.current_stim['number'] = random.choice(possibilities)
         else:
@@ -4072,7 +4072,7 @@ def generate_stimulus():
                         back = real_back + i
                 if back == real_back: back = None # if none of the above worked
                 elif DEBUG:
-                    print 'Forcing interference for %s' % current
+                    print('Forcing interference for %s' % current)
 
             if back:
                 nback_trial = mode.trial_number - back - 1
@@ -4084,12 +4084,12 @@ def generate_stimulus():
                     if matching_stim in conflict_positions: # swap 'em
                         i = positions.index(matching_stim)
                         if DEBUG:
-                            print "moving position%i from %i to %i for %s" % (i+1, positions[i], mode.current_stim[current], current)
-                        mode.current_stim['position' + `i+1`] = mode.current_stim[current]
+                            print("moving position%i from %i to %i for %s" % (i+1, positions[i], mode.current_stim[current], current))
+                        mode.current_stim['position' + repr(i+1)] = mode.current_stim[current]
                         positions[i] = mode.current_stim[current]
                     positions[int(current[-1])-1] = matching_stim
                 if DEBUG:
-                    print "setting %s to %i" % (current, matching_stim)
+                    print("setting %s to %i" % (current, matching_stim))
                 mode.current_stim[current] = matching_stim
 
         if multi > 1:
@@ -4097,11 +4097,11 @@ def generate_stimulus():
                 mod = 'position'
                 if 'vis1' in mode.modalities[mode.mode] and random.random() < .5:
                     mod = 'vis'
-                offset = random.choice(range(1, multi))
+                offset = random.choice(list(range(1, multi)))
                 for i in range(multi):
-                    mode.current_stim[mod + `i+1`] = stats.session[mod + `((i+offset)%multi) + 1`][mode.trial_number - real_back - 1]
+                    mode.current_stim[mod + repr(i+1)] = stats.session[mod + repr(((i+offset)%multi) + 1)][mode.trial_number - real_back - 1]
                     if mod == 'position':
-                        positions[i] = mode.current_stim[mod + `i+1`]
+                        positions[i] = mode.current_stim[mod + repr(i+1)]
 
 
     # set static stimuli according to mode.
@@ -4116,9 +4116,9 @@ def generate_stimulus():
     if multi > 1 and not 'vis1' in mode.modalities[mode.mode]:
         for i in range(1, 5):
             if cfg.MULTI_MODE == 'color':
-                mode.current_stim['vis'+`i`] = 0 # use squares
+                mode.current_stim['vis'+repr(i)] = 0 # use squares
             elif cfg.MULTI_MODE == 'image':
-                mode.current_stim['vis'+`i`] = cfg.VISUAL_COLORS[0]
+                mode.current_stim['vis'+repr(i)] = cfg.VISUAL_COLORS[0]
 
     # in jaeggi mode, set using the predetermined sequence.
     if cfg.JAEGGI_MODE:
@@ -4167,10 +4167,10 @@ def generate_stimulus():
     else:
         variable = 0
     if DEBUG and multi < 2:
-        print "trial=%i, \tpos=%i, \taud=%i, \tcol=%i, \tvis=%i, \tnum=%i,\top=%s, \tvar=%i" % \
+        print("trial=%i, \tpos=%i, \taud=%i, \tcol=%i, \tvis=%i, \tnum=%i,\top=%s, \tvar=%i" % \
                 (mode.trial_number, mode.current_stim['position1'], mode.current_stim['audio'],
                  mode.current_stim['color'], mode.current_stim['vis'], \
-                 mode.current_stim['number'], mode.current_operation, variable)
+                 mode.current_stim['number'], mode.current_operation, variable))
     if multi == 1:
         visuals[0].spawn(mode.current_stim['position1'], mode.current_stim['color'],
                          mode.current_stim['vis'], mode.current_stim['number'],
@@ -4179,20 +4179,20 @@ def generate_stimulus():
         for i in range(1, multi+1):
             if cfg.MULTI_MODE == 'color':
                 if DEBUG:
-                    print "trial=%i, \tpos=%i, \taud=%i, \tcol=%i, \tvis=%i, \tnum=%i,\top=%s, \tvar=%i" % \
-                        (mode.trial_number, mode.current_stim['position' + `i`], mode.current_stim['audio'],
-                        cfg.VISUAL_COLORS[i-1], mode.current_stim['vis'+`i`], \
-                        mode.current_stim['number'], mode.current_operation, variable)
-                visuals[i-1].spawn(mode.current_stim['position'+`i`], cfg.VISUAL_COLORS[i-1],
-                                   mode.current_stim['vis'+`i`], mode.current_stim['number'],
+                    print("trial=%i, \tpos=%i, \taud=%i, \tcol=%i, \tvis=%i, \tnum=%i,\top=%s, \tvar=%i" % \
+                        (mode.trial_number, mode.current_stim['position' + repr(i)], mode.current_stim['audio'],
+                        cfg.VISUAL_COLORS[i-1], mode.current_stim['vis'+repr(i)], \
+                        mode.current_stim['number'], mode.current_operation, variable))
+                visuals[i-1].spawn(mode.current_stim['position'+repr(i)], cfg.VISUAL_COLORS[i-1],
+                                   mode.current_stim['vis'+repr(i)], mode.current_stim['number'],
                                    mode.current_operation, variable)
             else:
                 if DEBUG:
-                    print "trial=%i, \tpos=%i, \taud=%i, \tcol=%i, \tvis=%i, \tnum=%i,\top=%s, \tvar=%i" % \
-                        (mode.trial_number, mode.current_stim['position' + `i`], mode.current_stim['audio'],
-                        mode.current_stim['vis'+`i`], i, \
-                        mode.current_stim['number'], mode.current_operation, variable)
-                visuals[i-1].spawn(mode.current_stim['position'+`i`], mode.current_stim['vis'+`i`],
+                    print("trial=%i, \tpos=%i, \taud=%i, \tcol=%i, \tvis=%i, \tnum=%i,\top=%s, \tvar=%i" % \
+                        (mode.trial_number, mode.current_stim['position' + repr(i)], mode.current_stim['audio'],
+                        mode.current_stim['vis'+repr(i)], i, \
+                        mode.current_stim['number'], mode.current_operation, variable))
+                visuals[i-1].spawn(mode.current_stim['position'+repr(i)], mode.current_stim['vis'+repr(i)],
                                    i,                            mode.current_stim['number'],
                                    mode.current_operation, variable)
 
