@@ -23,7 +23,7 @@ from time import strftime
 from datetime import date
 
 import gettext
-gettext.install('messages', localedir='res/i18n', str=True)
+gettext.install('messages', localedir='res/i18n')
 
 # Clinical mode?  Clinical mode sets cfg.JAEGGI_MODE = True, enforces a minimal user
 # interface, and saves results into a binary file (default 'logfile.dat') which
