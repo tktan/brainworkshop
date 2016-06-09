@@ -3172,6 +3172,7 @@ class AnalysisLabel:
         self.label.text = ''.join(str_list)
 
         stats.submit_session(percent, category_percents)
+        stats.parse_statsfile()
 
 # this controls the title of the session history chart.
 class ChartTitleLabel:
